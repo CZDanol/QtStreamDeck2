@@ -5,15 +5,17 @@
 #include <QJsonObject>
 
 #include "qstreamdeckdeclares.h"
+#include "qstreamdeckevent.h"
 
 class QStreamDeckPlugin : public QObject {
 Q_OBJECT
+	friend class QStreamDeckDevice;
 
 public:
 	QStreamDeckPlugin();
 	virtual ~QStreamDeckPlugin() = default;
 
-public:
+protected:
 	/**
  * Initializes the plugin from the command line arguments
  */
@@ -28,9 +30,12 @@ signals:
 	 */
 	void softwareMessageReceived(const QJsonObject &message);
 
+	/// Emited when any known event is received.
+	void eventReceived(const QStreamDeckEvent &e);
+
 protected:
 	template<typename Action>
-	void registerActionType(const QString &actionUID) {
+	void registerActionType(const QStreamDeckActionUID &actionUID) {
 		Q_ASSERT(actionTypes_.contains(actionUID));
 		actionTypes_[actionUID] = []() { return new Action(); };
 	}
@@ -41,6 +46,7 @@ protected:
 private slots:
 	void onWebSocketTextMessageReceived(const QString &text);
 	void onSoftwareMessageReceived(const QJsonObject &message);
+	void onEventReceived(const QStreamDeckEvent &e);
 
 private:
 	int port_ = -1;
@@ -53,12 +59,15 @@ private:
 
 private:
 	std::unordered_map<QString, std::unique_ptr<QStreamDeckDevice>> devices_;
-	QHash<QString, std::function<QStreamDeckAction *()>> actionTypes_;
+	QHash<QStreamDeckActionUID, std::function<QStreamDeckAction *()>> actionTypes_;
 
 };
 
-template<typename Device>
+template<typename Device_>
 class QStreamDeckPluginT : public QStreamDeckPlugin {
+
+public:
+	using Device = Device_;
 
 protected:
 	virtual QStreamDeckDevice *createDevice() final override {

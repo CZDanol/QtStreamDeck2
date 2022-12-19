@@ -3,9 +3,10 @@
 #include <QCommandLineParser>
 #include <QCommandLineOption>
 #include <QJsonDocument>
+#include <QMetaEnum>
 
-#include "qstreamdeckenums.h"
 #include "qstreamdeckdevice.h"
+#include "qstreamdeckaction.h"
 
 QStreamDeckPlugin::QStreamDeckPlugin() {
 	connect(&websocket_, &QWebSocket::textMessageReceived, this, &QStreamDeckPlugin::onWebSocketTextMessageReceived);
@@ -14,6 +15,7 @@ QStreamDeckPlugin::QStreamDeckPlugin() {
 	});
 
 	connect(this, &QStreamDeckPlugin::softwareMessageReceived, this, &QStreamDeckPlugin::onSoftwareMessageReceived);
+	connect(this, &QStreamDeckPlugin::eventReceived, this, &QStreamDeckPlugin::onEventReceived);
 }
 
 void QStreamDeckPlugin::init(QCoreApplication &app) {
@@ -53,16 +55,39 @@ void QStreamDeckPlugin::onWebSocketTextMessageReceived(const QString &text) {
 }
 
 void QStreamDeckPlugin::onSoftwareMessageReceived(const QJsonObject &message) {
-	const QString event = message["event"].toString();
+	if(const QStreamDeckEvent e = QStreamDeckEvent::fromMessage(message); e.type != QStreamDeckEvent::Type::unknown)
+		emit eventReceived(e);
+}
 
-	if(event == QStreamDeckEvent::deviceDidConnect) {
-		const QStreamDeckDeviceContext deviceContext = message["device"].toString();
-		auto device = std::unique_ptr<QStreamDeckDevice>(createDevice());
-		device->init(this, deviceContext, message["deviceInfo"].toObject());
-		devices_.insert_or_assign(deviceContext, std::move(device));
+void QStreamDeckPlugin::onEventReceived(const QStreamDeckEvent &e) {
+	using ET = QStreamDeckEvent::Type;
+
+	const QStreamDeckDeviceContext deviceContext = e.json["device"].toString();
+
+	switch(e.type) {
+
+		case ET::deviceDidConnect: {
+			auto device = std::unique_ptr<QStreamDeckDevice>(createDevice());
+			device->init(this, deviceContext, e.json["deviceInfo"].toObject());
+			devices_.insert_or_assign(deviceContext, std::move(device));
+			return;
+		}
+
+		case ET::deviceDidDisconnect: {
+			devices_.erase(deviceContext);
+			return;
+		}
+
+		default:
+			break;
+
 	}
 
-	else if(event == QStreamDeckEvent::deviceDidDisconnect) {
-		devices_.erase(message["device"].toString());
+	if(!deviceContext.isEmpty()) {
+		const auto dit = devices_.find(deviceContext);
+		if(dit != devices_.end())
+			emit dit->second->eventReceived(e);
+		else
+			qWarning() << "QtStreamDeck error: Expected device " << deviceContext << "to exist.";
 	}
 }

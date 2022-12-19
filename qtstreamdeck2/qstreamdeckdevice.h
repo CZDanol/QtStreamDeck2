@@ -4,13 +4,15 @@
 #include <QJsonObject>
 
 #include "qstreamdeckdeclares.h"
+#include "qstreamdeckevent.h"
 
 class QStreamDeckDevice : public QObject {
 Q_OBJECT
 	friend class QStreamDeckPlugin;
 
 public:
-	virtual ~QStreamDeckDevice() = default;
+	QStreamDeckDevice();
+	virtual ~QStreamDeckDevice();
 
 public:
 	inline QStreamDeckPlugin *plugin() {
@@ -25,8 +27,14 @@ public:
 		return deviceInfo_;
 	}
 
+signals:
+	void eventReceived(const QStreamDeckEvent &e);
+
 protected:
 	virtual void init(QStreamDeckPlugin *plugin, const QStreamDeckDeviceContext &deviceContext, const QJsonObject &deviceInfo);
+
+private slots:
+	void onEventReceived(const QStreamDeckEvent &e);
 
 private:
 	QStreamDeckPlugin *plugin_ = nullptr;
@@ -34,12 +42,15 @@ private:
 	QJsonObject deviceInfo_;
 
 private:
-	QHash<QString
+	std::unordered_map<QString, std::unique_ptr<QStreamDeckAction>> actions_;
 
 };
 
-template<typename Plugin>
+template<typename Plugin_>
 class QStreamDeckDeviceT : public QStreamDeckDevice {
+
+public:
+	using Plugin = Plugin_;
 
 public:
 	inline Plugin *plugin() {
