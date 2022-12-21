@@ -15,14 +15,18 @@ void QStreamDeckDevice::init(QStreamDeckPlugin *plugin, const QString &deviceCon
 	plugin_ = plugin;
 	deviceContext_ = deviceContext;
 	deviceInfo_ = deviceInfo;
+	deviceType_ = DeviceType(deviceInfo["type"].toInt());
+
+	const auto sizeJson = deviceInfo["size"];
+	size_ = QPoint(sizeJson["columns"].toInt(), sizeJson["rows"].toInt());
 }
 
 void QStreamDeckDevice::onEventReceived(const QStreamDeckEvent &e) {
-	using ET = QStreamDeckEvent::Type;
+	using ET = QStreamDeckEvent::EventType;
 
 	const QStreamDeckActionContext actionContext = e.json["context"].toString();
 
-	switch(e.type) {
+	switch(e.eventType) {
 
 		case ET::willAppear: {
 			const QString actionType = e.json["action"].toString();

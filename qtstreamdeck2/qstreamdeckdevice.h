@@ -11,6 +11,20 @@ Q_OBJECT
 	friend class QStreamDeckPlugin;
 
 public:
+	enum class DeviceType {
+		streamDeck,
+		streamDeckMini,
+		streamDeckXL,
+		streamDeckMobile,
+		corsairGKeys,
+		streamDeckPedal,
+		corsairVoyager,
+		streamDeckPlus,
+	};
+
+	Q_ENUM(DeviceType);
+
+public:
 	QStreamDeckDevice();
 	virtual ~QStreamDeckDevice();
 
@@ -27,6 +41,19 @@ public:
 		return deviceInfo_;
 	}
 
+	inline DeviceType deviceType() const {
+		return deviceType_;
+	}
+
+	/// Returns action grid size
+	inline const QPoint &size() const {
+		return size_;
+	}
+
+public:
+	void switchToProfile(const QString &targetProfileName);
+	void switchToPreviousProfile();
+
 signals:
 	void eventReceived(const QStreamDeckEvent &e);
 
@@ -40,6 +67,8 @@ private:
 	QStreamDeckPlugin *plugin_ = nullptr;
 	QStreamDeckDeviceContext deviceContext_;
 	QJsonObject deviceInfo_;
+	DeviceType deviceType_;
+	QPoint size_;
 
 private:
 	std::unordered_map<QString, std::unique_ptr<QStreamDeckAction>> actions_;
@@ -58,3 +87,7 @@ public:
 	}
 
 };
+
+constexpr inline int operator +(QStreamDeckDevice::DeviceType v) {
+	return int(v);
+}

@@ -7,6 +7,7 @@
 
 #include "qstreamdeckdevice.h"
 #include "qstreamdeckaction.h"
+#include "qstreamdeckcommand.h"
 
 QStreamDeckPlugin::QStreamDeckPlugin() {
 	connect(&websocket_, &QWebSocket::textMessageReceived, this, &QStreamDeckPlugin::onWebSocketTextMessageReceived);
@@ -47,6 +48,36 @@ void QStreamDeckPlugin::init(QCoreApplication &app) {
 
 	// Connect to the SW
 	websocket_.open(QStringLiteral("ws://localhost:%1").arg(port_));
+
+	// Send the plugin registration message
+	sendMessage(QJsonObject{
+		{"event", registerEvent_},
+		{"uuid",  pluginUUID_}
+	});
+
+	// And ask for global settings
+	sendMessage(QJsonObject{
+		{"event",   +QStreamDeckCommand::getGlobalSettings},
+		{"context", pluginUUID_},
+	});
+}
+
+void QStreamDeckPlugin::setGlobalSetting(const QString &key, const QJsonValue &set) {
+	globalSettings_[key] = set;
+	setGlobalSettings(globalSettings_);
+}
+
+void QStreamDeckPlugin::setGlobalSettings(const QJsonObject &set) {
+	globalSettings_ = set;
+	sendMessage(QJsonObject{
+		{"event", +QStreamDeckCommand::setGlobalSettings},
+		{"context", pluginUUID_},
+		{"payload", set},
+	});
+}
+
+void QStreamDeckPlugin::sendMessage(const QJsonObject &message) {
+	websocket_.sendTextMessage(QJsonDocument(message).toJson(QJsonDocument::Compact));
 }
 
 void QStreamDeckPlugin::onWebSocketTextMessageReceived(const QString &text) {
@@ -55,16 +86,16 @@ void QStreamDeckPlugin::onWebSocketTextMessageReceived(const QString &text) {
 }
 
 void QStreamDeckPlugin::onSoftwareMessageReceived(const QJsonObject &message) {
-	if(const QStreamDeckEvent e = QStreamDeckEvent::fromMessage(message); e.type != QStreamDeckEvent::Type::unknown)
+	if(const QStreamDeckEvent e = QStreamDeckEvent::fromMessage(message); e.eventType != QStreamDeckEvent::EventType::unknown)
 		emit eventReceived(e);
 }
 
 void QStreamDeckPlugin::onEventReceived(const QStreamDeckEvent &e) {
-	using ET = QStreamDeckEvent::Type;
+	using ET = QStreamDeckEvent::EventType;
 
 	const QStreamDeckDeviceContext deviceContext = e.json["device"].toString();
 
-	switch(e.type) {
+	switch(e.eventType) {
 
 		case ET::deviceDidConnect: {
 			auto device = std::unique_ptr<QStreamDeckDevice>(createDevice());
@@ -78,6 +109,12 @@ void QStreamDeckPlugin::onEventReceived(const QStreamDeckEvent &e) {
 			return;
 		}
 
+		case ET::didReceiveGlobalSettings: {
+			globalSettings_ = e.payload["settings"].toObject();
+			areGlobalSettingsReady_ = true;
+			emit globalSettingsReceived();
+		}
+
 		default:
 			break;
 
@@ -85,9 +122,21 @@ void QStreamDeckPlugin::onEventReceived(const QStreamDeckEvent &e) {
 
 	if(!deviceContext.isEmpty()) {
 		const auto dit = devices_.find(deviceContext);
-		if(dit != devices_.end())
+		if(dit != devices_.end()) {
 			emit dit->second->eventReceived(e);
+			return;
+		}
 		else
 			qWarning() << "QtStreamDeck error: Expected device " << deviceContext << "to exist.";
+	}
+
+	if(const QStreamDeckActionContext actionContext = e.json["context"].toString(); !actionContext.isEmpty()) {
+		QStreamDeckAction *a = actions_.value(actionContext);
+		if(a) {
+			emit a->eventReceived(e);
+			return;
+		}
+		else
+			qWarning() << "QtStreamDeck error: Expected action " << actionContext << "to exist.";
 	}
 }

@@ -10,10 +10,7 @@ struct QStreamDeckEvent {
 Q_GADGET
 
 public:
-	static QStreamDeckEvent fromMessage(const QJsonObject &json);
-
-public:
-	enum class Type {
+	enum class EventType {
 		unknown = -1,
 		didReceiveSettings,
 		didReceiveGlobalSettings,
@@ -35,13 +32,16 @@ public:
 		sendToPlugin
 	};
 
-	Q_ENUM(Type);
+	Q_ENUM(EventType);
+
+public:
+	static QStreamDeckEvent fromMessage(const QJsonObject &json);
 
 public:
 	/// Original json object of the event
 	QJsonObject json;
 
-	Type type = Type::unknown;
+	EventType eventType = EventType::unknown;
 	QJsonObject payload;
 
 };

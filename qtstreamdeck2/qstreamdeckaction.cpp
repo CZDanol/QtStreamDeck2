@@ -3,6 +3,12 @@
 #include <QMetaEnum>
 #include <QJsonArray>
 
+#include "qstreamdeckplugin.h"
+
+QStreamDeckAction::~QStreamDeckAction() {
+	device_->plugin()->actions_.remove(actionContext_);
+}
+
 void QStreamDeckAction::init(QStreamDeckDevice *device, const QStreamDeckEvent &appearEvent) {
 	const QJsonObject &json = appearEvent.json;
 	const QJsonObject &payload = appearEvent.payload;
@@ -19,15 +25,17 @@ void QStreamDeckAction::init(QStreamDeckDevice *device, const QStreamDeckEvent &
 
 	const auto controllerStr = payload["controller"].toString().toLower();
 	controller_ = Controller(QMetaEnum::fromType<Controller>().keyToValue(controllerStr.toStdString().c_str()));
+
+	device->plugin()->actions_.insert(actionContext_, this);
 }
 
 void QStreamDeckAction::onEventReceived(const QStreamDeckEvent &e) {
-	using ET = QStreamDeckEvent::Type;
+	using ET = QStreamDeckEvent::EventType;
 
 	// Update action state
 	state_ = e.payload["state"].toInt();
 
-	switch(e.type) {
+	switch(e.eventType) {
 
 		case ET::keyDown:
 			isPressed_ = true;

@@ -20,6 +20,9 @@ public:
 	Q_ENUM(Controller);
 
 public:
+	virtual ~QStreamDeckAction();
+
+public:
 	inline QStreamDeckDevice *device() {
 		return device_;
 	}
