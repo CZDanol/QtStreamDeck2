@@ -29,6 +29,10 @@ void QStreamDeckAction::init(QStreamDeckDevice *device, const QStreamDeckEvent &
 	device->plugin()->actions_.insert(actionContext_, this);
 }
 
+void QStreamDeckAction::updatePropertyInspector() {
+
+}
+
 void QStreamDeckAction::onEventReceived(const QStreamDeckEvent &e) {
 	using ET = QStreamDeckEvent::EventType;
 

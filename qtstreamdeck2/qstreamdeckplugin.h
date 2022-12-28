@@ -33,6 +33,10 @@ public:
 		return globalSettings_;
 	}
 
+	inline const QJsonValue &globalSetting(const QString &key) const {
+		return globalSettings_[key];
+	}
+
 	inline const QString &pluginUUID() const {
 		return pluginUUID_;
 	}
