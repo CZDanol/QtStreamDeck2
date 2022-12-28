@@ -3,6 +3,7 @@
 #include <QCoreApplication>
 #include <QWebSocket>
 #include <QJsonObject>
+#include <QSettings>
 
 #include "qstreamdeckdeclares.h"
 #include "qstreamdeckevent.h"
@@ -25,16 +26,11 @@ public:
 public:
 	/**
 	 * Returns global settings of the plugin.
-	 * The global settings might not be ready yet as the plugin is asking for them asynchronously at the application start.
-	 * Because of that, it is recommended to check areGlobalSettingsReady and potentially connect to the globalSettingsReceived signal.
+	 * The settings are not stored through the SD globalSettings API, instead it uses QSettings and registry under the hood.
+	 * This is because SD globalSettings have to be obtained asynchronously, so they would not be available during plugin startup and initial didAppear events, making things more complicated than they need to be.
 	 */
 	inline const QJsonObject &globalSettings() const {
-		Q_ASSERT(areGlobalSettingsReady_);
 		return globalSettings_;
-	}
-
-	inline bool areGlobalSettingsReady() const {
-		return areGlobalSettingsReady_;
 	}
 
 	inline const QString &pluginUUID() const {
@@ -63,7 +59,7 @@ signals:
 	 */
 	void eventReceived(const QStreamDeckEvent &e);
 
-	void globalSettingsReceived();
+	// void globalSettingsReceived();
 
 protected:
 	template<typename Action>
@@ -88,8 +84,10 @@ private:
 
 private:
 	QWebSocket websocket_;
+
+private:
 	QJsonObject globalSettings_;
-	bool areGlobalSettingsReady_ = false;
+	QScopedPointer<QSettings> globalSettingsStorage_;
 
 private:
 	std::unordered_map<QStreamDeckDeviceContext, std::unique_ptr<QStreamDeckDevice>> devices_;

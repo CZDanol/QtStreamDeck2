@@ -46,6 +46,12 @@ void QStreamDeckPlugin::init(QCoreApplication &app) {
 		info_ = cmdParser.value(infoOption);
 	}
 
+	// Setup global settings
+	{
+		globalSettingsStorage_.reset(new QSettings(QSettings::UserScope, "Elgato Stream Deck Plugin", pluginUUID_));
+		globalSettings_ = QJsonDocument::fromJson(globalSettingsStorage_->value("globalSettings").toByteArray()).object();
+	}
+
 	// Connect to the SW
 	websocket_.open(QStringLiteral("ws://localhost:%1").arg(port_));
 
@@ -69,11 +75,12 @@ void QStreamDeckPlugin::setGlobalSetting(const QString &key, const QJsonValue &s
 
 void QStreamDeckPlugin::setGlobalSettings(const QJsonObject &set) {
 	globalSettings_ = set;
-	sendMessage(QJsonObject{
-		{"event", +QStreamDeckCommand::setGlobalSettings},
+	globalSettingsStorage_->setValue("globalSettings", QJsonDocument(globalSettings_).toJson(QJsonDocument::Compact));
+	/*sendMessage(QJsonObject{
+		{"event",   +QStreamDeckCommand::setGlobalSettings},
 		{"context", pluginUUID_},
 		{"payload", set},
-	});
+	});*/
 }
 
 void QStreamDeckPlugin::sendMessage(const QJsonObject &message) {
@@ -110,9 +117,9 @@ void QStreamDeckPlugin::onEventReceived(const QStreamDeckEvent &e) {
 		}
 
 		case ET::didReceiveGlobalSettings: {
-			globalSettings_ = e.payload["settings"].toObject();
-			areGlobalSettingsReady_ = true;
-			emit globalSettingsReceived();
+			/*globalSettings_ = e.payload["settings"].toObject();
+			emit globalSettingsReceived();*/
+			break;
 		}
 
 		default:
