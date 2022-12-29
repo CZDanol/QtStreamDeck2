@@ -14,12 +14,19 @@ QStreamDeckPlugin::QStreamDeckPlugin() {
 	connect(&websocket_, QOverload<QAbstractSocket::SocketError>::of(&QWebSocket::error), [this](QAbstractSocket::SocketError e) {
 		qWarning() << "Websocket error: " << websocket_.errorString();
 	});
+	connect(&websocket_, &QWebSocket::connected, this, [this] {
+		qDebug() << "Connected to Stream Deck";
+		for(const auto &msg: messageQueue_)
+			websocket_.sendTextMessage(msg);
+
+		messageQueue_.clear();
+	});
 
 	connect(this, &QStreamDeckPlugin::softwareMessageReceived, this, &QStreamDeckPlugin::onSoftwareMessageReceived);
 	connect(this, &QStreamDeckPlugin::eventReceived, this, &QStreamDeckPlugin::onEventReceived);
 }
 
-void QStreamDeckPlugin::init(QCoreApplication &app) {
+void QStreamDeckPlugin::init(const QString &pluginUID, QCoreApplication &app) {
 	// Load up command line parameters
 	{
 		QCommandLineParser cmdParser;
@@ -41,6 +48,7 @@ void QStreamDeckPlugin::init(QCoreApplication &app) {
 		cmdParser.process(app);
 
 		port_ = cmdParser.value(portOption).toInt();
+		pluginUID_ = pluginUID;
 		pluginUUID_ = cmdParser.value(pluginuuidOption);
 		registerEvent_ = cmdParser.value(registerEventOption);
 		info_ = cmdParser.value(infoOption);
@@ -48,7 +56,7 @@ void QStreamDeckPlugin::init(QCoreApplication &app) {
 
 	// Setup global settings
 	{
-		globalSettingsStorage_.reset(new QSettings(QSettings::UserScope, "Elgato Stream Deck Plugin", pluginUUID_));
+		globalSettingsStorage_.reset(new QSettings(QSettings::UserScope, "Elgato Stream Deck Plugin", pluginUID));
 		globalSettings_ = QJsonDocument::fromJson(globalSettingsStorage_->value("globalSettings").toByteArray()).object();
 	}
 
@@ -84,7 +92,13 @@ void QStreamDeckPlugin::setGlobalSettings(const QJsonObject &set) {
 }
 
 void QStreamDeckPlugin::sendMessage(const QJsonObject &message) {
-	websocket_.sendTextMessage(QJsonDocument(message).toJson(QJsonDocument::Compact));
+	//qDebug() << "SND" << message;
+
+	const QString msg = QJsonDocument(message).toJson(QJsonDocument::Compact);
+	if(websocket_.isValid())
+		websocket_.sendTextMessage(msg);
+	else
+		messageQueue_ += msg;
 }
 
 void QStreamDeckPlugin::onWebSocketTextMessageReceived(const QString &text) {
@@ -100,6 +114,7 @@ void QStreamDeckPlugin::onSoftwareMessageReceived(const QJsonObject &message) {
 void QStreamDeckPlugin::onEventReceived(const QStreamDeckEvent &e) {
 	using ET = QStreamDeckEvent::EventType;
 
+	//qDebug() << "RCV" << e.json;
 	const QStreamDeckDeviceContext deviceContext = e.json["device"].toString();
 
 	switch(e.eventType) {
@@ -117,6 +132,17 @@ void QStreamDeckPlugin::onEventReceived(const QStreamDeckEvent &e) {
 		}
 
 		case ET::didReceiveGlobalSettings: {
+			// Transfer from plugin global settings to the QSettings, for compatibility with older versions
+			if(globalSettings_.isEmpty() && !e.payload.isEmpty()) {
+				setGlobalSettings(e.payload["settings"].toObject());
+
+				// Clear out the SD global settings
+				sendMessage(QJsonObject{
+					{"event",   +QStreamDeckCommand::setGlobalSettings},
+					{"context", pluginUUID_},
+					{"payload", QJsonObject{}},
+				});
+			}
 			/*globalSettings_ = e.payload["settings"].toObject();
 			emit globalSettingsReceived();*/
 			break;

@@ -30,11 +30,6 @@ protected:
 		QList<QStreamDeckPropertyInspectorCallback> callbacks;
 
 	public:
-		inline QString effectiveID() const {
-			return "pitem_" + id;
-		}
-
-	public:
 		virtual void buildHTML(QString &sink) const = 0;
 	};
 	using ItemUPtr = std::unique_ptr<Item>;
@@ -88,7 +83,7 @@ protected:
 		}
 
 		void buildProperties(QString &sink) const {
-			sink += QStringLiteral(" id=\"%1\" name=\"%1\"").arg(escapeQuotes(this->effectiveID()));
+			sink += QStringLiteral(" id=\"%1\" name=\"%1\"").arg(escapeQuotes(this->id));
 
 			for(auto it = properties.begin(), e = properties.end(); it != e; it++)
 				sink += QStringLiteral(" %1=\"%2\"").arg(it.key(), escapeQuotes(it.value()));
@@ -162,12 +157,12 @@ public:
 	};
 	struct Item_Section final : public ElementItemT<Item_Section> {
 		void buildHTML(QString &sink) const override {
-			sink += QStringLiteral("<div class=\"sdpi-heading\">%1</div>").arg(label.toHtmlEscaped());
+			sink += QStringLiteral("<div class=\"sdpi-heading\">%1</div>").arg(label);
 		}
 	};
 	struct Item_Message final : public ElementItemT<Item_Message> {
 		void buildHTML(QString &sink) const override {
-			sink += QStringLiteral("<details class=\"message\"><summary>%1</summary></div>").arg(label.toHtmlEscaped());
+			sink += QStringLiteral("<details class=\"message\"><summary>%1</summary></details>").arg(label);
 		}
 	};
 	struct Item_LineEdit final : public ValueItemT<Item_LineEdit> {
@@ -178,10 +173,12 @@ public:
 		}
 
 		void buildHTML(QString &sink) const override {
+			buildPre(sink);
 			sink += QStringLiteral("<input type=\"text\" class=\"spdi-item-value\" oninput=\"notifyValueChanged(this.name, this.value)\"");
 			sink += QStringLiteral(" value=\"%1\"").arg(escapeQuotes(this->value.toString()));
 			this->buildProperties(sink);
 			sink += ">";
+			buildPost(sink);
 		}
 	};
 };

@@ -20,6 +20,7 @@ public:
 	Q_ENUM(Controller);
 
 public:
+	QStreamDeckAction();
 	virtual ~QStreamDeckAction();
 
 public:

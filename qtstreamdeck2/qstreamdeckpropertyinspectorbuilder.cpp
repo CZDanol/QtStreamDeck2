@@ -17,8 +17,8 @@ QStreamDeckPropertyInspectorCallback QStreamDeckPropertyInspectorBuilder::buildC
 		if(item->callbacks.isEmpty())
 			continue;
 
-		Q_ASSERT(!item->effectiveID().isEmpty());
-		ct.insert(item->effectiveID(), item->callbacks);
+		Q_ASSERT(!item->id.isEmpty());
+		ct.insert(item->id, item->callbacks);
 	}
 
 	return [ct](const QStreamDeckEvent &e) {

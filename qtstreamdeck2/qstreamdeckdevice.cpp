@@ -2,6 +2,7 @@
 
 #include "qstreamdeckaction.h"
 #include "qstreamdeckplugin.h"
+#include "qstreamdeckcommand.h"
 
 QStreamDeckDevice::QStreamDeckDevice() {
 	connect(this, &QStreamDeckDevice::eventReceived, this, &QStreamDeckDevice::onEventReceived);
@@ -9,6 +10,21 @@ QStreamDeckDevice::QStreamDeckDevice() {
 
 QStreamDeckDevice::~QStreamDeckDevice() {
 
+}
+
+void QStreamDeckDevice::switchToProfile(const QString &targetProfileName) {
+	plugin()->sendMessage(QJsonObject{
+		{"event",   +QStreamDeckCommand::switchToProfile},
+		{"context", plugin()->pluginUUID()},
+		{"device",  deviceContext()},
+		{"payload", QJsonObject{
+			{"profile", targetProfileName}
+		}},
+	});
+}
+
+void QStreamDeckDevice::switchToPreviousProfile() {
+	switchToProfile({});
 }
 
 void QStreamDeckDevice::init(QStreamDeckPlugin *plugin, const QString &deviceContext, const QJsonObject &deviceInfo) {

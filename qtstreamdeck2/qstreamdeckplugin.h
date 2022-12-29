@@ -21,11 +21,17 @@ public:
 	/**
  * Initializes the plugin from the command line arguments
  */
-	virtual void init(QCoreApplication &app);
+	virtual void init(const QString &pluginUID, QCoreApplication &app);
 
 public:
+	/// Context handle for the plugin in streamdeck, changes with each run
 	inline const QString &pluginUUID() const {
 		return pluginUUID_;
+	}
+
+	/// Global, persistent plugin UID
+	inline const QString &pluginUID() const {
+		return pluginUID_;
 	}
 
 public:
@@ -69,7 +75,7 @@ signals:
 protected:
 	template<typename Action>
 	void registerActionType(const QStreamDeckActionUID &actionUID) {
-		Q_ASSERT(actionTypes_.contains(actionUID));
+		Q_ASSERT(!actionTypes_.contains(actionUID));
 		actionTypes_[actionUID] = []() { return new Action(); };
 	}
 
@@ -83,12 +89,14 @@ private slots:
 
 private:
 	int port_ = -1;
-	QString pluginUUID_;
+	QString pluginUUID_; ///< Context handle for the plugin in streamdeck
+	QString pluginUID_; ///< Global, persistent plugin UID
 	QString registerEvent_;
 	QString info_;
 
 private:
 	QWebSocket websocket_;
+	QList<QString> messageQueue_; /// Messages to be sent once the socket is connected
 
 private:
 	QJsonObject globalSettings_;

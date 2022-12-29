@@ -23,14 +23,6 @@ function connectElgatoStreamDeckSocket(inPort, inUUID, inRegisterEvent, inInfo, 
             event: inRegisterEvent,
             uuid: inUUID
         }));
-
-        // Notify the action that the property inspector is ready
-        websocket.send(JSON.stringify(son = {
-            event: "sendToPlugin",
-            context: uuid,
-            action: actionInfo.action,
-            payload: {cmd: "propertyInspectorReady"},
-        }));
     }
 
     websocket.onmessage = function (ev) {

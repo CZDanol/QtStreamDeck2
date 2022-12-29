@@ -7,6 +7,10 @@
 #include "qstreamdeckcommand.h"
 #include "qstreamdeckpropertyinspectorbuilder.h"
 
+QStreamDeckAction::QStreamDeckAction() {
+	connect(this, &QStreamDeckAction::eventReceived, this, &QStreamDeckAction::onEventReceived);
+}
+
 QStreamDeckAction::~QStreamDeckAction() {
 	device_->plugin()->actions_.remove(actionContext_);
 }
@@ -68,6 +72,10 @@ void QStreamDeckAction::onEventReceived(const QStreamDeckEvent &e) {
 	state_ = e.payload["state"].toInt();
 
 	switch(e.eventType) {
+
+		case ET::propertyInspectorDidAppear:
+			updatePropertyInspector();
+			break;
 
 		case ET::sendToPlugin:
 			if(propertyInspectorCallback_)
