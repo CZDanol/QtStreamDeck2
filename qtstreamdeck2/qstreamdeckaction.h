@@ -69,6 +69,23 @@ public:
 
 	void setSetting(const QString &key, const QJsonValue &value);
 
+public:
+	enum class SetTarget {
+		hardwareAndSoftware,
+		hardwareOnly,
+		softwareOnly
+	};
+
+	void setTitle(const QString &title, int state = -1, SetTarget target = SetTarget::hardwareAndSoftware);
+
+	void setImage(const QString &base64EncodedImage, int state = -1, SetTarget target = SetTarget::hardwareAndSoftware);
+	void setImage(const QImage &image, int state = -1, SetTarget target = SetTarget::hardwareAndSoftware);
+
+	void setState(int state);
+
+public:
+	void sendMessage(const QString &event, const QJsonObject &payload);
+
 public slots:
 	/**
  * Notifies the system that something about the property inspector has been changed and that the inspector should be rebuilt.
@@ -77,6 +94,12 @@ public slots:
 	void updatePropertyInspector();
 
 signals:
+	/// Emitted after initialization, when it's safe to access all fields of the action
+	void initialized();
+
+	/// Emitted when action settings has been changed (using setSetting/property inspector)
+	void settingsChanged();
+
 	void eventReceived(const QStreamDeckEvent &e);
 	void keyDown(const QStreamDeckEvent &e);
 	void keyUp(const QStreamDeckEvent &e);

@@ -181,4 +181,46 @@ public:
 			buildPost(sink);
 		}
 	};
+	struct Item_SpinBox final : public ValueItemT<Item_SpinBox> {
+
+		inline T &setPlaceholder(const QString &set) {
+			setProperty("placeholder", set);
+			return this->ref();
+		}
+
+		void buildHTML(QString &sink) const override {
+			buildPre(sink);
+			sink += QStringLiteral("<input"
+			                       " type=\"number\""
+			                       " inputtype=\"numeric\""
+			                       " pattern=\"[0-9]*\""
+			                       " class=\"spdi-item-value\""
+			                       " oninput=\"notifyValueChanged(this.name, this.value)\""
+			);
+			sink += QStringLiteral(" value=\"%1\"").arg(escapeQuotes(this->value.toString()));
+			this->buildProperties(sink);
+			sink += ">";
+			buildPost(sink);
+		}
+	};
+
+	struct Item_CheckBox final : public ValueItemT<Item_CheckBox> {
+
+		void buildHTML(QString &sink) const override {
+			buildPre(sink);
+			sink += QStringLiteral(
+				"<div class=\"spdi-item-value\">"
+				"<input type=\"checkbox\" oninput=\"notifyValueChanged(this.name, this.checked)\""
+			);
+			this->buildProperties(sink);
+			if(value.toBool())
+				sink += "checked";
+
+			sink += QStringLiteral(
+				">"
+				"</div>"
+			);
+			buildPost(sink);
+		}
+	};
 };

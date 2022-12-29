@@ -36,8 +36,18 @@ public:
 		return addItem<I::Item_Message>().setLabel(text);
 	}
 
+	/// Single line text edit
 	inline auto &addLineEdit(const QString &id, const QString &label) {
 		return addItem<I::Item_LineEdit>().setID(id).setLabel(label);
+	}
+
+	/// Integer input
+	inline auto &addSpinBox(const QString &id, const QString &label) {
+		return addItem<I::Item_SpinBox>().setID(id).setLabel(label);
+	}
+
+	inline auto &addCheckBox(const QString &id, const QString &label) {
+		return addItem<I::Item_CheckBox>().setID(id).setLabel(label);
 	}
 
 public:

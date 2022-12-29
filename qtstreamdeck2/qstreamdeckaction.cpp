@@ -2,6 +2,8 @@
 
 #include <QMetaEnum>
 #include <QJsonArray>
+#include <QBuffer>
+#include <QImage>
 
 #include "qstreamdeckplugin.h"
 #include "qstreamdeckcommand.h"
@@ -33,6 +35,8 @@ void QStreamDeckAction::init(QStreamDeckDevice *device, const QStreamDeckEvent &
 	controller_ = Controller(QMetaEnum::fromType<Controller>().keyToValue(controllerStr.toStdString().c_str()));
 
 	plugin()->actions_.insert(actionContext_, this);
+
+	emit initialized();
 }
 
 void QStreamDeckAction::setSettings(const QJsonObject &set) {
@@ -43,11 +47,56 @@ void QStreamDeckAction::setSettings(const QJsonObject &set) {
 		{"context", actionContext_},
 		{"payload", settings_},
 	});
+
+	emit settingsChanged();
 }
 
 void QStreamDeckAction::setSetting(const QString &key, const QJsonValue &value) {
 	settings_[key] = value;
 	setSettings(settings_);
+}
+
+void QStreamDeckAction::setTitle(const QString &title, int state, QStreamDeckAction::SetTarget target) {
+	QJsonObject payload{
+		{"title",  title},
+		{"target", int(target)},
+	};
+	if(state != -1)
+		payload.insert("state", state);
+
+	sendMessage(+QStreamDeckCommand::setTitle, payload);
+}
+
+void QStreamDeckAction::setImage(const QString &base64EncodedImage, int state, QStreamDeckAction::SetTarget target) {
+	QJsonObject payload{
+		{"image",  base64EncodedImage},
+		{"target", int(target)},
+	};
+	if(state != -1)
+		payload.insert("state", state);
+
+	sendMessage(+QStreamDeckCommand::setImage, payload);
+}
+
+void QStreamDeckAction::setImage(const QImage &image, int state, QStreamDeckAction::SetTarget target) {
+	QByteArray ba;
+	QBuffer buf(&ba);
+	buf.open(QIODevice::WriteOnly);
+	image.save(&buf, "PNG");
+
+	setImage(ba.toBase64(), state, target);
+}
+
+void QStreamDeckAction::setState(int state) {
+	sendMessage(+QStreamDeckCommand::setState, QJsonObject{{"state", state}});
+}
+
+void QStreamDeckAction::sendMessage(const QString &event, const QJsonObject &payload) {
+	plugin()->sendMessage(QJsonObject{
+		{"event",   event},
+		{"context", actionContext()},
+		{"payload", payload},
+	});
 }
 
 void QStreamDeckAction::updatePropertyInspector() {
