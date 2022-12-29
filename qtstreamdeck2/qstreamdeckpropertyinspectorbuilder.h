@@ -46,8 +46,8 @@ public:
 		return addItem<I::Item_SpinBox>().setID(id).setLabel(label);
 	}
 
-	inline auto &addCheckBox(const QString &id, const QString &label) {
-		return addItem<I::Item_CheckBox>().setID(id).setLabel(label);
+	inline auto &addCheckBox(const QString &id, const QString &label, const QString &rightSideLabel) {
+		return addItem<I::Item_CheckBox>().setID(id).setLabel(label).setRightSideLabel(rightSideLabel);
 	}
 
 public:

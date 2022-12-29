@@ -84,6 +84,9 @@ void QStreamDeckPlugin::setGlobalSetting(const QString &key, const QJsonValue &s
 void QStreamDeckPlugin::setGlobalSettings(const QJsonObject &set) {
 	globalSettings_ = set;
 	globalSettingsStorage_->setValue("globalSettings", QJsonDocument(globalSettings_).toJson(QJsonDocument::Compact));
+
+	emit globalSettingsChanged();
+
 	/*sendMessage(QJsonObject{
 		{"event",   +QStreamDeckCommand::setGlobalSettings},
 		{"context", pluginUUID_},

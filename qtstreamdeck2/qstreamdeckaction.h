@@ -78,7 +78,7 @@ public:
 
 	void setTitle(const QString &title, int state = -1, SetTarget target = SetTarget::hardwareAndSoftware);
 
-	void setImage(const QString &base64EncodedImage, int state = -1, SetTarget target = SetTarget::hardwareAndSoftware);
+	void setImage(const QString &data, int state = -1, SetTarget target = SetTarget::hardwareAndSoftware);
 	void setImage(const QImage &image, int state = -1, SetTarget target = SetTarget::hardwareAndSoftware);
 
 	void setState(int state);

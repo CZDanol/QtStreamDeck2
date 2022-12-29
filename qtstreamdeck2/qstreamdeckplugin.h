@@ -55,6 +55,8 @@ public:
 	void sendMessage(const QJsonObject &message);
 
 signals:
+	void globalSettingsChanged();
+
 	/**
 	 * Emitted whenever any message is received from the software.
 	 * The messages are processed internally by this library.

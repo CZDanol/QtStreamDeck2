@@ -195,7 +195,7 @@ public:
 			                       " inputtype=\"numeric\""
 			                       " pattern=\"[0-9]*\""
 			                       " class=\"spdi-item-value\""
-			                       " oninput=\"notifyValueChanged(this.name, this.value)\""
+			                       " oninput=\"notifyValueChanged(this.name, parseInt(this.value))\""
 			);
 			sink += QStringLiteral(" value=\"%1\"").arg(escapeQuotes(this->value.toString()));
 			this->buildProperties(sink);
@@ -206,21 +206,34 @@ public:
 
 	struct Item_CheckBox final : public ValueItemT<Item_CheckBox> {
 
+	public:
+		QString rightSideLabel;
+
+	public:
+		/// Extra label on the right side of the checkbox
+		inline T &setRightSideLabel(const QString &set) {
+			rightSideLabel = set;
+			return ref();
+		}
+
+	public:
 		void buildHTML(QString &sink) const override {
-			buildPre(sink);
 			sink += QStringLiteral(
+				"<div class=\"sdpi-item\" type=\"checkbox\">"
+				"<div class=\"sdpi-item-label\">%1</div>"
 				"<div class=\"spdi-item-value\">"
 				"<input type=\"checkbox\" oninput=\"notifyValueChanged(this.name, this.checked)\""
-			);
+			).arg(label);
 			this->buildProperties(sink);
 			if(value.toBool())
 				sink += "checked";
 
 			sink += QStringLiteral(
 				">"
+				"<label for=\"%2\"><span></span>%1</label>"
 				"</div>"
-			);
-			buildPost(sink);
+				"</div>"
+			).arg(rightSideLabel, id);
 		}
 	};
 };

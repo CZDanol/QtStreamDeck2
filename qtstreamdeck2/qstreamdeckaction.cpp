@@ -67,9 +67,9 @@ void QStreamDeckAction::setTitle(const QString &title, int state, QStreamDeckAct
 	sendMessage(+QStreamDeckCommand::setTitle, payload);
 }
 
-void QStreamDeckAction::setImage(const QString &base64EncodedImage, int state, QStreamDeckAction::SetTarget target) {
+void QStreamDeckAction::setImage(const QString &data, int state, QStreamDeckAction::SetTarget target) {
 	QJsonObject payload{
-		{"image",  base64EncodedImage},
+		{"image",  data},
 		{"target", int(target)},
 	};
 	if(state != -1)
@@ -79,12 +79,10 @@ void QStreamDeckAction::setImage(const QString &base64EncodedImage, int state, Q
 }
 
 void QStreamDeckAction::setImage(const QImage &image, int state, QStreamDeckAction::SetTarget target) {
-	QByteArray ba;
-	QBuffer buf(&ba);
+	QBuffer buf;
 	buf.open(QIODevice::WriteOnly);
 	image.save(&buf, "PNG");
-
-	setImage(ba.toBase64(), state, target);
+	setImage("data:image/png;base64," + buf.data().toBase64(), state, target);
 }
 
 void QStreamDeckAction::setState(int state) {
