@@ -51,10 +51,15 @@ public:
 	void setGlobalSetting(const QString &key, const QJsonValue &set);
 	void setGlobalSettings(const QJsonObject &set);
 
+	/// If the global setting is not set, sets it to defaultValue
+	void setGlobalSettingDefault(const QString &key, const QJsonValue &defaultValue);
+
 public:
 	void sendMessage(const QJsonObject &message);
 
 signals:
+	void initialized();
+
 	void globalSettingsChanged();
 
 	/**

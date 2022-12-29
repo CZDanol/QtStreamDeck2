@@ -32,6 +32,10 @@ public:
 		return device_->plugin();
 	}
 
+	inline const QString &actionUID() const {
+		return actionUID_;
+	}
+
 	inline const QStreamDeckActionContext &actionContext() const {
 		return actionContext_;
 	}
@@ -68,6 +72,9 @@ public:
 	void setSettings(const QJsonObject &set);
 
 	void setSetting(const QString &key, const QJsonValue &value);
+
+	/// If the setting is not set, sets it to defaultValue
+	void setSettingDefault(const QString &key, const QJsonValue &defaultValue);
 
 public:
 	enum class SetTarget {
@@ -128,6 +135,7 @@ private slots:
 	void onEventReceived(const QStreamDeckEvent &e);
 
 private:
+	QString actionUID_;
 	QStreamDeckDevice *device_ = nullptr;
 	QStreamDeckActionContext actionContext_;
 	QStreamDeckPropertyInspectorCallback propertyInspectorCallback_;

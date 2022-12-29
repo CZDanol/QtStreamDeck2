@@ -23,6 +23,7 @@ void QStreamDeckAction::init(QStreamDeckDevice *device, const QStreamDeckEvent &
 
 	device_ = device;
 	actionContext_ = json["context"].toString();
+	actionUID_ = json["action"].toString();
 	settings_ = payload["settings"].toObject();
 
 	state_ = payload["state"].toInt();
@@ -54,6 +55,11 @@ void QStreamDeckAction::setSettings(const QJsonObject &set) {
 void QStreamDeckAction::setSetting(const QString &key, const QJsonValue &value) {
 	settings_[key] = value;
 	setSettings(settings_);
+}
+
+void QStreamDeckAction::setSettingDefault(const QString &key, const QJsonValue &defaultValue) {
+	if(!settings_.contains(key))
+		setSetting(key, defaultValue);
 }
 
 void QStreamDeckAction::setTitle(const QString &title, int state, QStreamDeckAction::SetTarget target) {

@@ -74,6 +74,8 @@ void QStreamDeckPlugin::init(const QString &pluginUID, QCoreApplication &app) {
 		{"event",   +QStreamDeckCommand::getGlobalSettings},
 		{"context", pluginUUID_},
 	});
+
+	emit initialized();
 }
 
 void QStreamDeckPlugin::setGlobalSetting(const QString &key, const QJsonValue &set) {
@@ -92,6 +94,11 @@ void QStreamDeckPlugin::setGlobalSettings(const QJsonObject &set) {
 		{"context", pluginUUID_},
 		{"payload", set},
 	});*/
+}
+
+void QStreamDeckPlugin::setGlobalSettingDefault(const QString &key, const QJsonValue &defaultValue) {
+	if(!globalSettings_.contains(key))
+		setGlobalSetting(key, defaultValue);
 }
 
 void QStreamDeckPlugin::sendMessage(const QJsonObject &message) {
