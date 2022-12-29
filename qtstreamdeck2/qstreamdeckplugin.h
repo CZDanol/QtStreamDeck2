@@ -14,6 +14,10 @@ Q_OBJECT
 	friend class QStreamDeckAction;
 
 public:
+	/// Encodes image to be used by Stream Deck
+	static QString encodeImage(const QImage &image);
+
+public:
 	QStreamDeckPlugin();
 	virtual ~QStreamDeckPlugin() = default;
 

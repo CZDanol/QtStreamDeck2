@@ -4,10 +4,19 @@
 #include <QCommandLineOption>
 #include <QJsonDocument>
 #include <QMetaEnum>
+#include <QBuffer>
+#include <QImage>
 
 #include "qstreamdeckdevice.h"
 #include "qstreamdeckaction.h"
 #include "qstreamdeckcommand.h"
+
+QString QStreamDeckPlugin::encodeImage(const QImage &image) {
+	QBuffer buf;
+	buf.open(QIODevice::WriteOnly);
+	image.save(&buf, "PNG");
+	return "data:image/png;base64," + buf.data().toBase64();
+}
 
 QStreamDeckPlugin::QStreamDeckPlugin() {
 	connect(&websocket_, &QWebSocket::textMessageReceived, this, &QStreamDeckPlugin::onWebSocketTextMessageReceived);

@@ -2,7 +2,6 @@
 
 #include <QMetaEnum>
 #include <QJsonArray>
-#include <QBuffer>
 #include <QImage>
 
 #include "qstreamdeckplugin.h"
@@ -85,14 +84,19 @@ void QStreamDeckAction::setImage(const QString &data, int state, QStreamDeckActi
 }
 
 void QStreamDeckAction::setImage(const QImage &image, int state, QStreamDeckAction::SetTarget target) {
-	QBuffer buf;
-	buf.open(QIODevice::WriteOnly);
-	image.save(&buf, "PNG");
-	setImage("data:image/png;base64," + buf.data().toBase64(), state, target);
+	setImage(QStreamDeckPlugin::encodeImage(image), state, target);
 }
 
 void QStreamDeckAction::setState(int state) {
 	sendMessage(+QStreamDeckCommand::setState, QJsonObject{{"state", state}});
+}
+
+void QStreamDeckAction::setFeedback(const QJsonObject &data) {
+	sendMessage(+QStreamDeckCommand::setFeedback, data);
+}
+
+void QStreamDeckAction::setFeedbackLayout(const QString &layout) {
+	sendMessage(+QStreamDeckCommand::setFeedbackLayout, {{"layout", layout}});
 }
 
 void QStreamDeckAction::sendMessage(const QString &event, const QJsonObject &payload) {

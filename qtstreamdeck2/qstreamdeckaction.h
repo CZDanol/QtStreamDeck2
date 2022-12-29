@@ -90,6 +90,9 @@ public:
 
 	void setState(int state);
 
+	void setFeedback(const QJsonObject &data);
+	void setFeedbackLayout(const QString &layout);
+
 public:
 	void sendMessage(const QString &event, const QJsonObject &payload);
 

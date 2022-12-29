@@ -19,6 +19,8 @@ namespace QStreamDeckCommand {
 		showAlert,
 		showOk,
 		setState,
+		setFeedback,
+		setFeedbackLayout,
 		switchToProfile,
 		sendToPropertyInspector,
 
