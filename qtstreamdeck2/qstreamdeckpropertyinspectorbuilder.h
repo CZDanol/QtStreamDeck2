@@ -11,16 +11,33 @@ class QStreamDeckPropertyInspectorBuilder {
 	using I = QStreamDeckPropertyInspectorItems;
 
 public:
-	inline I::Item_HTML &addHTML(const QString &html) {
-		auto e = new I::Item_HTML;
-		items_.emplace_back(e);
-		return e->setHTML(html);
+	inline QStreamDeckAction *action() const {
+		return action_;
 	}
 
-	inline I::Item_LineEdit &addLineEdit(const QString &id, const QString &label) {
-		auto e = new I::Item_LineEdit;
-		items_.emplace_back(e);
-		return e->setID(id).setLabel(label);
+public:
+	template<typename T>
+	inline T &addItem() {
+		auto i = new T;
+		i->action = action_;
+		items_.emplace_back(i);
+		return *i;
+	}
+
+	inline auto &addHTML(const QString &html) {
+		return addItem<I::Item_HTML>().setHTML(html);
+	}
+
+	inline auto &addSection(const QString &label) {
+		return addItem<I::Item_Section>().setLabel(label);
+	}
+
+	inline auto &addMessage(const QString &text) {
+		return addItem<I::Item_Message>().setLabel(text);
+	}
+
+	inline auto &addLineEdit(const QString &id, const QString &label) {
+		return addItem<I::Item_LineEdit>().setID(id).setLabel(label);
 	}
 
 public:
@@ -28,9 +45,10 @@ public:
 
 public:
 	QString buildHTML() const;
+	QStreamDeckPropertyInspectorCallback buildCallback() const;
 
 private:
 	QStreamDeckAction *action_ = nullptr;
-	std::vector<ItemUPtr> items_;
+	std::vector<I::ItemUPtr> items_;
 
 };

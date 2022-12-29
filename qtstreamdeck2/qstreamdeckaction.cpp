@@ -4,6 +4,8 @@
 #include <QJsonArray>
 
 #include "qstreamdeckplugin.h"
+#include "qstreamdeckcommand.h"
+#include "qstreamdeckpropertyinspectorbuilder.h"
 
 QStreamDeckAction::~QStreamDeckAction() {
 	device_->plugin()->actions_.remove(actionContext_);
@@ -26,11 +28,37 @@ void QStreamDeckAction::init(QStreamDeckDevice *device, const QStreamDeckEvent &
 	const auto controllerStr = payload["controller"].toString().toLower();
 	controller_ = Controller(QMetaEnum::fromType<Controller>().keyToValue(controllerStr.toStdString().c_str()));
 
-	device->plugin()->actions_.insert(actionContext_, this);
+	plugin()->actions_.insert(actionContext_, this);
+}
+
+void QStreamDeckAction::setSettings(const QJsonObject &set) {
+	settings_ = set;
+
+	plugin()->sendMessage(QJsonObject{
+		{"event",   +QStreamDeckCommand::setSettings},
+		{"context", actionContext_},
+		{"payload", settings_},
+	});
+}
+
+void QStreamDeckAction::setSetting(const QString &key, const QJsonValue &value) {
+	settings_[key] = value;
+	setSettings(settings_);
 }
 
 void QStreamDeckAction::updatePropertyInspector() {
+	QStreamDeckPropertyInspectorBuilder b(this);
+	buildPropertyInspector(b);
 
+	propertyInspectorCallback_ = b.buildCallback();
+	plugin()->sendMessage(QJsonObject{
+		{"event",   +QStreamDeckCommand::sendToPropertyInspector},
+		{"context", actionContext_},
+		{"payload", QJsonObject{
+			{"cmd",     "updateBody"},
+			{"content", b.buildHTML()},
+		}},
+	});
 }
 
 void QStreamDeckAction::onEventReceived(const QStreamDeckEvent &e) {
@@ -40,6 +68,11 @@ void QStreamDeckAction::onEventReceived(const QStreamDeckEvent &e) {
 	state_ = e.payload["state"].toInt();
 
 	switch(e.eventType) {
+
+		case ET::sendToPlugin:
+			if(propertyInspectorCallback_)
+				propertyInspectorCallback_(e);
+			break;
 
 		case ET::keyDown:
 			isPressed_ = true;

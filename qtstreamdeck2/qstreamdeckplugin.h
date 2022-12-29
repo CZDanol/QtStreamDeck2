@@ -24,27 +24,28 @@ public:
 	virtual void init(QCoreApplication &app);
 
 public:
-	/**
-	 * Returns global settings of the plugin.
-	 * The settings are not stored through the SD globalSettings API, instead it uses QSettings and registry under the hood.
-	 * This is because SD globalSettings have to be obtained asynchronously, so they would not be available during plugin startup and initial didAppear events, making things more complicated than they need to be.
-	 */
-	inline const QJsonObject &globalSettings() const {
-		return globalSettings_;
-	}
-
-	inline const QJsonValue &globalSetting(const QString &key) const {
-		return globalSettings_[key];
-	}
-
 	inline const QString &pluginUUID() const {
 		return pluginUUID_;
 	}
 
 public:
+	/**
+ * Returns global settings of the plugin.
+ * The settings are not stored through the SD globalSettings API, instead it uses QSettings and registry under the hood.
+ * This is because SD globalSettings have to be obtained asynchronously, so they would not be available during plugin startup and initial didAppear events, making things more complicated than they need to be.
+ */
+	inline const QJsonObject &globalSettings() const {
+		return globalSettings_;
+	}
+
+	inline const QJsonValue globalSetting(const QString &key) const {
+		return globalSettings_[key];
+	}
+
 	void setGlobalSetting(const QString &key, const QJsonValue &set);
 	void setGlobalSettings(const QJsonObject &set);
 
+public:
 	void sendMessage(const QJsonObject &message);
 
 signals:

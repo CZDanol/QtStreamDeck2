@@ -55,6 +55,19 @@ public:
 		return controller_;
 	}
 
+public:
+	inline const QJsonObject &settings() const {
+		return settings_;
+	}
+
+	inline QJsonValue setting(const QString &key) const {
+		return settings_[key];
+	}
+
+	void setSettings(const QJsonObject &set);
+
+	void setSetting(const QString &key, const QJsonValue &value);
+
 public slots:
 	/**
  * Notifies the system that something about the property inspector has been changed and that the inspector should be rebuilt.
@@ -93,6 +106,7 @@ private slots:
 private:
 	QStreamDeckDevice *device_ = nullptr;
 	QStreamDeckActionContext actionContext_;
+	QStreamDeckPropertyInspectorCallback propertyInspectorCallback_;
 	QJsonObject settings_;
 	int state_ = -1;
 	bool isPressed_ = false;

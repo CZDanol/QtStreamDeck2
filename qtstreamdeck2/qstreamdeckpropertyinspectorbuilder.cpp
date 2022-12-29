@@ -10,3 +10,20 @@ QString QStreamDeckPropertyInspectorBuilder::buildHTML() const {
 		item->buildHTML(r);
 	return r;
 }
+
+QStreamDeckPropertyInspectorCallback QStreamDeckPropertyInspectorBuilder::buildCallback() const {
+	QHash<QString, QList<QStreamDeckPropertyInspectorCallback>> ct;
+	for(const auto &item: items_) {
+		if(item->callbacks.isEmpty())
+			continue;
+
+		Q_ASSERT(!item->effectiveID().isEmpty());
+		ct.insert(item->effectiveID(), item->callbacks);
+	}
+
+	return [ct](const QStreamDeckEvent &e) {
+		if(auto fs = ct.value(e.payload["element"].toString()); !fs.isEmpty())
+			for(const auto &f: fs)
+				f(e);
+	};
+}

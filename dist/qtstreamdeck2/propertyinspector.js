@@ -42,3 +42,25 @@ function connectElgatoStreamDeckSocket(inPort, inUUID, inRegisterEvent, inInfo, 
         commandFunctions[msg.cmd](msg);
     };
 }
+
+function notifyValueChanged(elementID, value) {
+    websocket.send(JSON.stringify({
+        event: "sendToPlugin",
+        context: uuid,
+        action: actionInfo.action,
+        payload: {
+            cmd: "valueChanged",
+            element: elementID,
+            value: value
+        },
+    }));
+}
+
+function openUrl(url) {
+    websocket.send(JSON.stringify({
+        event: "openUrl",
+        payload: {
+            url: url
+        },
+    }));
+}
