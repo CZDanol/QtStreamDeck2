@@ -74,8 +74,13 @@ protected:
 		}
 
 	protected:
+		void buildLabel(QString &sink) const {
+			sink += QStringLiteral("<div class=\"sdpi-item-label%2\">%1</div>").arg(label, label.isEmpty() ? " empty" : "");
+		}
+
 		void buildPre(QString &sink) const {
-			sink += QStringLiteral("<div class=\"sdpi-item\"><div class=\"sdpi-item-label\">%1</div>").arg(label);
+			sink += QStringLiteral("<div class=\"sdpi-item\">");
+			buildLabel(sink);
 		}
 
 		void buildPost(QString &sink) const {
@@ -161,8 +166,31 @@ public:
 		}
 	};
 	struct Item_Message final : public ElementItemT<Item_Message> {
+
+	public:
+		QStringList paragraphs;
+
+	public:
+		inline T &addParagraph(const QString &p) {
+			paragraphs += p;
+			return *this;
+		}
+
+		inline T &addParagraphs(const QStringList &p) {
+			paragraphs += p;
+			return *this;
+		}
+
+	public:
 		void buildHTML(QString &sink) const override {
-			sink += QStringLiteral("<details class=\"message\"><summary>%1</summary></details>").arg(label);
+			buildPre(sink);
+			sink += "<details class=\"sdpi-item-value message\" open>";
+
+			for(const QString &p: paragraphs)
+				sink += QStringLiteral("<p>%1</p>").arg(p);
+
+			sink += "</details>";
+			buildPost(sink);
 		}
 	};
 	struct Item_LineEdit final : public ValueItemT<Item_LineEdit> {
@@ -174,7 +202,7 @@ public:
 
 		void buildHTML(QString &sink) const override {
 			buildPre(sink);
-			sink += QStringLiteral("<input type=\"text\" class=\"spdi-item-value\" oninput=\"notifyValueChanged(this.name, this.value)\"");
+			sink += QStringLiteral("<input type=\"text\" class=\"sdpi-item-value\" oninput=\"notifyValueChanged(this.name, this.value)\"");
 			sink += QStringLiteral(" value=\"%1\"").arg(escapeQuotes(this->value.toString()));
 			this->buildProperties(sink);
 			sink += ">";
@@ -194,7 +222,7 @@ public:
 			                       " type=\"number\""
 			                       " inputtype=\"numeric\""
 			                       " pattern=\"[0-9]*\""
-			                       " class=\"spdi-item-value\""
+			                       " class=\"sdpi-item-value\""
 			                       " oninput=\"notifyValueChanged(this.name, parseInt(this.value))\""
 			);
 			sink += QStringLiteral(" value=\"%1\"").arg(escapeQuotes(this->value.toString()));
@@ -218,12 +246,11 @@ public:
 
 	public:
 		void buildHTML(QString &sink) const override {
-			sink += QStringLiteral(
-				"<div class=\"sdpi-item\" type=\"checkbox\">"
-				"<div class=\"sdpi-item-label\">%1</div>"
-				"<div class=\"spdi-item-value\">"
-				"<input type=\"checkbox\" oninput=\"notifyValueChanged(this.name, this.checked)\""
-			).arg(label);
+			sink += "<div class=\"sdpi-item\" type=\"checkbox\">";
+			buildLabel(sink);
+			sink +=
+				"<div class=\"sdpi-item-value\">"
+				"<input type=\"checkbox\" oninput=\"notifyValueChanged(this.name, this.checked)\"";
 			this->buildProperties(sink);
 			if(value.toBool())
 				sink += "checked";

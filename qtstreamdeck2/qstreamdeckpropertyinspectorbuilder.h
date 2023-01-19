@@ -33,7 +33,10 @@ public:
 	}
 
 	inline auto &addMessage(const QString &text) {
-		return addItem<I::Item_Message>().setLabel(text);
+		return addItem<I::Item_Message>().addParagraph(text);
+	}
+	inline auto &addMessage(const QStringList &paragraphs) {
+		return addItem<I::Item_Message>().addParagraphs(paragraphs);
 	}
 
 	/// Single line text edit
@@ -46,8 +49,8 @@ public:
 		return addItem<I::Item_SpinBox>().setID(id).setLabel(label);
 	}
 
-	inline auto &addCheckBox(const QString &id, const QString &label, const QString &rightSideLabel) {
-		return addItem<I::Item_CheckBox>().setID(id).setLabel(label).setRightSideLabel(rightSideLabel);
+	inline auto &addCheckBox(const QString &id, const QString &rightSideLabel) {
+		return addItem<I::Item_CheckBox>().setID(id).setRightSideLabel(rightSideLabel);
 	}
 
 public:
