@@ -263,4 +263,36 @@ public:
 			).arg(rightSideLabel, id);
 		}
 	};
+
+
+	struct Item_ComboBox final : public ValueItemT<Item_ComboBox> {
+
+	public:
+		QStringList items;
+
+	public:
+		inline T &setItems(const QStringList &set) {
+			items = set;
+			return ref();
+		}
+
+	public:
+		void buildHTML(QString &sink) const override {
+			buildPre(sink);
+			sink +=
+				"<select class=\"sdpi-item-value select\" oninput=\"notifyValueChanged(this.name, this.selectedIndex)\"";
+			this->buildProperties(sink);
+			sink += ">";
+
+			int i = 0;
+			const int val = value.toInt();
+			for(const QString &item : items) {
+				sink += QStringLiteral("<option value=\"%1\"%3>%2</option>").arg(QString::number(i), item, val == i ? " selected" : "");
+				i++;
+			}
+
+			sink += "</select>";
+			buildPost(sink);
+		}
+	};
 };

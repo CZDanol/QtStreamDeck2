@@ -35,6 +35,7 @@ public:
 	inline auto &addMessage(const QString &text) {
 		return addItem<I::Item_Message>().addParagraph(text);
 	}
+
 	inline auto &addMessage(const QStringList &paragraphs) {
 		return addItem<I::Item_Message>().addParagraphs(paragraphs);
 	}
@@ -51,6 +52,10 @@ public:
 
 	inline auto &addCheckBox(const QString &id, const QString &rightSideLabel) {
 		return addItem<I::Item_CheckBox>().setID(id).setRightSideLabel(rightSideLabel);
+	}
+
+	inline auto &addComboBox(const QString &id, const QString &label, const QStringList &items) {
+		return addItem<I::Item_ComboBox>().setID(id).setLabel(label).setItems(items);
 	}
 
 public:
