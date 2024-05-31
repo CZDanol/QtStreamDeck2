@@ -155,12 +155,14 @@ void QStreamDeckAction::onEventReceived(const QStreamDeckEvent &e) {
 			break;
 		}
 
-		case ET::dialPress:
-			isPressed_ = e.payload["pressed"].toBool();
-			if(isPressed_)
-				emit dialPressed(e);
-			else
-				emit dialReleased(e);
+		case ET::dialDown:
+			isPressed_ = true;
+			emit dialPressed(e);
+			break;
+			
+		case ET::dialUp:
+			isPressed_ = false;
+			emit dialReleased(e);
 			break;
 
 		case ET::dialRotate:
