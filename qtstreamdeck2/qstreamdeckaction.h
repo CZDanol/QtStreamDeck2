@@ -115,10 +115,10 @@ signals:
 	void keyUp(const QStreamDeckEvent &e);
 	void touchTap(const QPoint &pos, bool hold, const QStreamDeckEvent &e);
 
-	/// Emitted on dialPressEvent with pressed=true
+	/// Emitted on dialDown
 	void dialPressed(const QStreamDeckEvent &e);
 
-	/// Emitted on dialPressEvent with pressed=false
+	/// Emitted on dialUp
 	void dialReleased(const QStreamDeckEvent &e);
 
 	void dialRotated(int delta, const QStreamDeckEvent &e);
